@@ -604,16 +604,20 @@ const levelMeta = { easy:["EASY","level-easy"], mod:["MODERATE","level-mod"], ha
 
 function highlightR(code){
   const esc = code.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const KW = /^(function|if|else|for|while|return|library|switch|TRUE|FALSE|in)$/;
+  const master = /("(?:[^"\\]|\\.)*")|(\b\d+\.?\d*L?\b)|([a-zA-Z_][a-zA-Z0-9_.]*)(?=\()|(\b[a-zA-Z_][a-zA-Z0-9_.]*\b)|(&lt;-|&lt;=|&gt;=|==|!=|%%|%\/%|&amp;&amp;|\|\||[+\-*/^])/g;
   const lines = esc.split("\n").map(line=>{
-    // comment
     let commentIdx = line.indexOf("#");
     let codePart = commentIdx>=0 ? line.slice(0,commentIdx) : line;
     let commentPart = commentIdx>=0 ? line.slice(commentIdx) : "";
-    codePart = codePart.replace(/"([^"]*)"/g, '<span class="tok-str">"$1"</span>');
-    codePart = codePart.replace(/\b(\d+\.?\d*L?)\b/g, '<span class="tok-num">$1</span>');
-    codePart = codePart.replace(/\b(function|if|else|for|while|return|library|switch|TRUE|FALSE|in)\b/g, '<span class="tok-kw">$1</span>');
-    codePart = codePart.replace(/\b([a-zA-Z_][a-zA-Z0-9_.]*)(?=\()/g, '<span class="tok-fn">$1</span>');
-    codePart = codePart.replace(/(&lt;-|&lt;=|&gt;=|==|!=|%%|%\/%|&amp;&amp;|\|\||[+\-*/^&lt;&gt;])/g, '<span class="tok-op">$1</span>');
+    codePart = codePart.replace(master, (m, str, num, fn, word, op)=>{
+      if(str) return `<span class="tok-str">${str}</span>`;
+      if(num) return `<span class="tok-num">${num}</span>`;
+      if(fn) return `<span class="tok-fn">${fn}</span>`;
+      if(word) return KW.test(word) ? `<span class="tok-kw">${word}</span>` : word;
+      if(op) return `<span class="tok-op">${op}</span>`;
+      return m;
+    });
     if(commentPart) commentPart = '<span class="tok-com">'+commentPart+'</span>';
     return codePart + commentPart;
   });
