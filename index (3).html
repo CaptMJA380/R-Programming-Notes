@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>R Programming — Aruna's Academy</title>
+<meta name="description" content="Interactive R Programming course notes by Aruna's Academy. Learn, build, succeed.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FAFAFA; --surface:#FFFFFF; --surface-2:#F2F3F8; --surface-3:#EAEBF3;
+  --text:#13132B; --text-dim:#5C5C74; --text-faint:#9494A8;
+  --border:#E6E7EF; --accent:#1D4ED8; --accent-soft:#EAF0FE; --gold:#F0A800; --gold-soft:#FFF6E0;
+  --code-bg:#F4F6FB; --code-border:#DDE2F0;
+  --shadow:0 1px 2px rgba(20,20,40,.04),0 8px 24px rgba(20,20,40,.06);
+  --shadow-lg:0 20px 60px rgba(20,20,40,.12);
+  --radius:14px; --radius-sm:9px;
+  --green:#1A9D5C; --amber:#B07B00; --red:#D14343;
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+[data-theme="dark"]{
+  --bg:#0A0A12; --surface:#13131F; --surface-2:#191926; --surface-3:#212233;
+  --text:#EDEDF5; --text-dim:#A3A3B8; --text-faint:#6B6B82;
+  --border:#26273A; --accent:#6C8FFF; --accent-soft:#1B2240; --gold:#F0C24E; --gold-soft:#2B250F;
+  --code-bg:#0E0E18; --code-border:#262739;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 30px rgba(0,0,0,.4);
+  --shadow-lg:0 30px 80px rgba(0,0,0,.6);
+  --green:#3CCB8A; --amber:#E0B23D; --red:#FF6B6B;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background:var(--bg); color:var(--text);
+  transition:background .45s var(--ease), color .45s var(--ease);
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+::selection{ background:var(--accent); color:#fff; }
+
+/* ---------- Top progress bar ---------- */
+#scroll-progress{
+  position:fixed; top:0; left:0; height:3px; width:0%;
+  background:linear-gradient(90deg, var(--accent), var(--gold));
+  z-index:1000; transition:width .1s linear;
+}
+
+/* ---------- Top nav ---------- */
+.topbar{
+  position:sticky; top:0; z-index:200;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 28px; backdrop-filter:saturate(180%) blur(20px);
+  background:color-mix(in srgb, var(--bg) 78%, transparent);
+  border-bottom:1px solid var(--border);
+  transition:background .45s var(--ease), border-color .45s var(--ease);
+}
+.brand{ display:flex; align-items:center; gap:10px; cursor:pointer; }
+.brand img{ height:34px; width:auto; display:block; }
+.brand-text{ display:flex; flex-direction:column; line-height:1.05; }
+.brand-text b{ font-size:14.5px; font-weight:700; letter-spacing:-.01em; }
+.brand-text span{ font-size:10.5px; color:var(--text-dim); letter-spacing:.06em; text-transform:uppercase; }
+.topbar-right{ display:flex; align-items:center; gap:14px; }
+.hamburger{ display:none; }
+
+.theme-toggle{
+  position:relative; width:52px; height:30px; border-radius:30px;
+  background:var(--surface-3); border:1px solid var(--border); cursor:pointer;
+  transition:background .35s var(--ease), border-color .35s var(--ease);
+}
+.theme-toggle .knob{
+  position:absolute; top:2px; left:2px; width:24px; height:24px; border-radius:50%;
+  background:linear-gradient(135deg, var(--accent), #4F6FE0);
+  box-shadow:0 2px 6px rgba(0,0,0,.25);
+  transition:transform .4s cubic-bezier(.34,1.56,.64,1), background .4s var(--ease);
+  display:flex; align-items:center; justify-content:center; font-size:13px;
+}
+[data-theme="dark"] .theme-toggle .knob{ transform:translateX(22px); background:linear-gradient(135deg,#6C8FFF,#8A6CFF); }
+
+.progress-pill{
+  display:flex; align-items:center; gap:7px; padding:6px 13px; border-radius:30px;
+  background:var(--surface-2); border:1px solid var(--border); font-size:12.5px; color:var(--text-dim);
+  font-weight:600;
+}
+.progress-pill .ring{ width:16px; height:16px; }
+
+/* ---------- Layout ---------- */
+.layout{ display:flex; max-width:1320px; margin:0 auto; align-items:flex-start; }
+.sidebar{
+  position:sticky; top:64px; align-self:flex-start;
+  width:288px; flex-shrink:0; padding:28px 14px 80px 22px;
+  height:calc(100vh - 64px); overflow-y:auto;
+}
+.sidebar::-webkit-scrollbar{ width:5px; }
+.sidebar::-webkit-scrollbar-thumb{ background:var(--border); border-radius:10px; }
+
+.sidebar-title{ font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--text-faint); font-weight:700; margin:0 0 14px 10px; }
+
+.module-link{
+  display:flex; align-items:center; gap:11px; padding:9px 10px; border-radius:10px;
+  cursor:pointer; margin-bottom:2px; color:var(--text-dim); font-size:13.6px; font-weight:600;
+  transition:background .25s var(--ease), color .25s var(--ease), transform .25s var(--ease);
+  position:relative; user-select:none;
+}
+.module-link:hover{ background:var(--surface-2); color:var(--text); transform:translateX(2px); }
+.module-link.active{ background:var(--accent-soft); color:var(--accent); }
+.module-link .num{
+  width:22px; height:22px; border-radius:50%; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:10.5px; font-weight:700;
+  background:var(--surface-3); color:var(--text-faint);
+  transition:all .3s var(--ease);
+}
+.module-link.active .num{ background:var(--accent); color:#fff; }
+.module-link.complete .num{ background:var(--green); color:#fff; }
+.module-link .ring-wrap{ position:relative; width:22px; height:22px; flex-shrink:0; }
+.module-link .ring-wrap svg{ position:absolute; inset:0; transform:rotate(-90deg); }
+.module-link .label{ flex:1; }
+.module-link .pct{ font-size:10px; color:var(--text-faint); font-weight:700; }
+
+.sidebar-footer{ margin-top:24px; padding:14px 14px; border-radius:12px; background:var(--surface-2); margin-left:6px; }
+.sidebar-footer p{ font-size:11.5px; color:var(--text-dim); line-height:1.5; }
+.reset-btn{
+  margin-top:10px; font-size:11.5px; color:var(--accent); background:none; border:none; cursor:pointer; font-weight:700; padding:0;
+}
+
+main{ flex:1; min-width:0; padding:0 32px 120px; }
+
+/* ---------- Hero ---------- */
+.hero{
+  padding:80px 6px 56px; text-align:center; position:relative;
+}
+.hero img.hero-logo{ height:88px; margin-bottom:28px; opacity:0; animation:rise .8s var(--ease) .1s forwards; }
+.hero h1{
+  font-size:clamp(34px,5vw,56px); font-weight:800; letter-spacing:-.03em; line-height:1.05;
+  opacity:0; animation:rise .8s var(--ease) .25s forwards;
+}
+.hero h1 span{ background:linear-gradient(100deg, var(--accent), var(--gold)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.hero p.lead{
+  margin-top:18px; font-size:18px; color:var(--text-dim); max-width:560px; margin-left:auto; margin-right:auto;
+  opacity:0; animation:rise .8s var(--ease) .4s forwards;
+}
+.hero-stats{
+  display:flex; gap:14px; justify-content:center; margin-top:38px; flex-wrap:wrap;
+  opacity:0; animation:rise .8s var(--ease) .55s forwards;
+}
+.hero-stat{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:16px 22px; min-width:120px; box-shadow:var(--shadow);
+  transition:transform .35s var(--ease), box-shadow .35s var(--ease), background .45s var(--ease), border-color .45s var(--ease);
+}
+.hero-stat:hover{ transform:translateY(-4px); box-shadow:var(--shadow-lg); }
+.hero-stat b{ display:block; font-size:24px; font-weight:800; color:var(--accent); }
+.hero-stat span{ font-size:11.5px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.05em; }
+@keyframes rise{ from{opacity:0; transform:translateY(18px);} to{opacity:1; transform:translateY(0);} }
+
+/* ---------- Module section ---------- */
+.module{
+  margin-top:56px; scroll-margin-top:84px;
+  transition:opacity .7s var(--ease), transform .7s var(--ease);
+}
+.module.pre-reveal{ opacity:0; transform:translateY(24px); }
+.module.pre-reveal.in-view{ opacity:1; transform:translateY(0); }
+
+.module-head{
+  display:flex; align-items:center; gap:16px; margin-bottom:6px;
+}
+.module-badge{
+  width:46px; height:46px; border-radius:13px; background:linear-gradient(135deg, var(--accent), #4F6FE0);
+  color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:17px; flex-shrink:0;
+  box-shadow:0 6px 18px rgba(29,78,216,.28);
+}
+.module-head h2{ font-size:25px; font-weight:800; letter-spacing:-.02em; }
+.module-head .module-eyebrow{ font-size:11.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.08em; font-weight:700; }
+.module-divider{ height:1px; background:var(--border); margin:20px 0 26px; transition:background .45s var(--ease); }
+
+/* ---------- Topic card ---------- */
+.topic{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:24px 26px 22px; margin-bottom:18px; box-shadow:var(--shadow);
+  transition:background .45s var(--ease), border-color .45s var(--ease), box-shadow .3s var(--ease), transform .3s var(--ease);
+}
+.topic:hover{ box-shadow:var(--shadow-lg); transform:translateY(-2px); }
+.topic-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; cursor:pointer; }
+.topic-head h3{ font-size:16.5px; font-weight:700; letter-spacing:-.01em; display:flex; align-items:center; gap:9px; }
+.topic-head h3 .dot{ width:7px; height:7px; border-radius:50%; background:var(--gold); flex-shrink:0; }
+.topic-check{
+  width:22px; height:22px; border-radius:7px; border:1.5px solid var(--border); flex-shrink:0; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; transition:all .25s var(--ease); background:var(--surface);
+}
+.topic-check svg{ opacity:0; transform:scale(.5); transition:all .25s var(--ease); }
+.topic-check.checked{ background:var(--green); border-color:var(--green); }
+.topic-check.checked svg{ opacity:1; transform:scale(1); }
+
+.topic-body{ margin-top:14px; }
+.topic-note{ font-size:14px; color:var(--text-dim); line-height:1.65; margin-bottom:13px; }
+.topic-note code{ background:var(--surface-2); padding:1.5px 6px; border-radius:5px; font-family:'JetBrains Mono',monospace; font-size:12.3px; color:var(--accent); }
+
+/* ---------- Code block ---------- */
+.code-block{
+  background:var(--code-bg); border:1px solid var(--code-border); border-radius:var(--radius-sm);
+  overflow:hidden; margin-bottom:10px; transition:background .45s var(--ease), border-color .45s var(--ease);
+}
+.code-block .code-bar{
+  display:flex; align-items:center; justify-content:space-between; padding:8px 13px;
+  border-bottom:1px solid var(--code-border); background:color-mix(in srgb, var(--code-bg) 60%, var(--surface-2));
+}
+.code-bar .lang{ font-size:10.5px; font-weight:700; letter-spacing:.06em; color:var(--text-faint); text-transform:uppercase; }
+.copy-btn{
+  font-size:11px; font-weight:600; color:var(--text-dim); background:var(--surface-2); border:1px solid var(--border);
+  padding:4px 10px; border-radius:7px; cursor:pointer; transition:all .2s var(--ease); display:flex; align-items:center; gap:5px;
+}
+.copy-btn:hover{ background:var(--accent); color:#fff; border-color:var(--accent); }
+pre.code{
+  margin:0; padding:14px 16px; overflow-x:auto; font-family:'JetBrains Mono',monospace; font-size:12.6px; line-height:1.65;
+}
+pre.code::-webkit-scrollbar{ height:6px; }
+pre.code::-webkit-scrollbar-thumb{ background:var(--border); border-radius:10px; }
+
+.tok-kw{ color:#C586C0; font-weight:600; }
+[data-theme="light"] .tok-kw, :root .tok-kw{ color:#9333C9; }
+.tok-str{ color:#3CA374; }
+[data-theme="dark"] .tok-str{ color:#7FD99A; }
+.tok-num{ color:#C97B2C; }
+.tok-com{ color:var(--text-faint); font-style:italic; }
+.tok-fn{ color:var(--accent); }
+.tok-op{ color:var(--text-dim); }
+
+.output-block{
+  background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-sm);
+  padding:11px 16px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-dim);
+  white-space:pre-wrap; line-height:1.6; transition:background .45s var(--ease), border-color .45s var(--ease);
+}
+.output-label{ font-size:10px; font-weight:700; letter-spacing:.08em; color:var(--text-faint); text-transform:uppercase; margin-bottom:6px; display:block; }
+
+/* ---------- Case studies ---------- */
+.case-wrap{
+  margin-top:24px; border-radius:var(--radius); overflow:hidden; border:1px solid var(--border);
+  background:linear-gradient(180deg, var(--gold-soft), var(--surface));
+  transition:background .45s var(--ease), border-color .45s var(--ease);
+}
+.case-head{ padding:16px 22px 4px; display:flex; align-items:center; gap:9px; }
+.case-head .icon{ font-size:17px; }
+.case-head h4{ font-size:14.5px; font-weight:800; letter-spacing:-.01em; }
+.case-list{ padding:6px 22px 20px; display:flex; flex-direction:column; gap:10px; }
+.case-item{
+  display:flex; gap:12px; align-items:flex-start; padding:13px 15px; border-radius:10px;
+  background:var(--surface); border:1px solid var(--border); transition:background .45s var(--ease), border-color .45s var(--ease), transform .25s var(--ease);
+}
+.case-item:hover{ transform:translateX(3px); }
+.case-num{ font-size:13px; font-weight:800; color:var(--text-faint); flex-shrink:0; width:18px; }
+.case-text{ font-size:13.6px; color:var(--text); line-height:1.55; }
+.level-tag{
+  display:inline-block; font-size:9.5px; font-weight:800; letter-spacing:.05em; text-transform:uppercase;
+  padding:2.5px 8px; border-radius:20px; margin-right:8px; vertical-align:middle;
+}
+.level-easy{ background:color-mix(in srgb, var(--green) 16%, transparent); color:var(--green); }
+.level-mod{ background:color-mix(in srgb, var(--amber) 18%, transparent); color:var(--amber); }
+.level-hard{ background:color-mix(in srgb, var(--red) 16%, transparent); color:var(--red); }
+
+/* ---------- Footer ---------- */
+footer{
+  text-align:center; padding:60px 20px 50px; border-top:1px solid var(--border); margin-top:80px; color:var(--text-faint); font-size:12.5px;
+  transition:border-color .45s var(--ease);
+}
+footer img{ height:30px; margin-bottom:14px; opacity:.85; }
+footer .tag{ margin-top:6px; letter-spacing:.05em; text-transform:uppercase; font-size:10.5px; font-weight:700; color:var(--text-dim); }
+
+/* ---------- Back to top ---------- */
+.fab{
+  position:fixed; bottom:26px; right:26px; width:46px; height:46px; border-radius:50%;
+  background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow-lg);
+  display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:300;
+  opacity:0; pointer-events:none; transform:translateY(10px) scale(.9);
+  transition:all .35s var(--ease);
+}
+.fab.show{ opacity:1; pointer-events:auto; transform:translateY(0) scale(1); }
+.fab:hover{ background:var(--accent); border-color:var(--accent); }
+.fab:hover svg path{ stroke:#fff; }
+.fab svg path{ stroke:var(--text-dim); transition:stroke .25s var(--ease); }
+
+/* ---------- Mobile ---------- */
+@media (max-width: 880px){
+  .sidebar{
+    position:fixed; top:0; left:0; height:100vh; width:280px; z-index:500;
+    background:var(--surface); border-right:1px solid var(--border);
+    transform:translateX(-100%); transition:transform .4s var(--ease), background .45s var(--ease);
+    padding-top:80px; box-shadow:var(--shadow-lg);
+  }
+  .sidebar.open{ transform:translateX(0); }
+  .hamburger{
+    display:flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:10px;
+    background:var(--surface-2); border:1px solid var(--border); cursor:pointer;
+  }
+  .layout{ display:block; }
+  main{ padding:0 18px 100px; }
+  .overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:400; opacity:0; pointer-events:none; transition:opacity .35s var(--ease);
+  }
+  .overlay.show{ opacity:1; pointer-events:auto; }
+  .progress-pill span.label-full{ display:none; }
+}
+@media (min-width: 881px){ .overlay{ display:none; } }
+</style>
+</head>
+<body data-theme="light">
+
+<div id="scroll-progress"></div>
+
+<header class="topbar">
+  <div class="brand" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+    <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 4.5H16M2 9H16M2 13.5H16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </button>
+    <img src="logo_small.png" alt="Aruna's Academy logo">
+    <div class="brand-text">
+      <b>Aruna's Academy</b>
+      <span>R Programming Course</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="progress-pill" id="progressPill">
+      <svg class="ring" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--border)" stroke-width="3"/><circle id="pillRing" cx="18" cy="18" r="15.5" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" stroke-dasharray="97.4" stroke-dashoffset="97.4" transform="rotate(-90 18 18)"/></svg>
+      <span class="label-full" id="progressLabel">0% complete</span>
+    </div>
+    <div class="theme-toggle" id="themeToggle" role="button" aria-label="Toggle dark mode">
+      <div class="knob" id="themeKnob">☀️</div>
+    </div>
+  </div>
+</header>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="layout">
+  <nav class="sidebar" id="sidebar">
+    <p class="sidebar-title">Course Map</p>
+    <div id="navList"></div>
+    <div class="sidebar-footer">
+      <p>Your progress is saved automatically in this browser. Check off topics as you learn them.</p>
+      <button class="reset-btn" id="resetBtn">Reset progress</button>
+    </div>
+  </nav>
+
+  <main>
+    <section class="hero">
+      <img class="hero-logo" src="logo_small.png" alt="Aruna's Academy">
+      <h1>Learn R, <span>one module at a time.</span></h1>
+      <p class="lead">Interactive course notes with runnable-style code, real output, and case studies — built for students of Aruna's Academy.</p>
+      <div class="hero-stats">
+        <div class="hero-stat"><b>9</b><span>Modules</span></div>
+        <div class="hero-stat"><b>27</b><span>Topics</span></div>
+        <div class="hero-stat"><b>27</b><span>Case Studies</span></div>
+      </div>
+    </section>
+
+    <div id="modulesRoot"></div>
+
+    <footer>
+      <img src="logo_small.png" alt="Aruna's Academy">
+      <div>Made with care for the students of Aruna's Academy</div>
+      <div class="tag">Learn &bull; Build &bull; Succeed</div>
+    </footer>
+  </main>
+</div>
+
+<div class="fab" id="fab" title="Back to top">
+  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 11L9 6L14 11" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+
+<script>
+/* ============================ DATA ============================ */
+const DATA = [
+{
+  title:"Basics", topics:[
+    {t:"Variables & Assignment", n:"A variable stores data in memory. R uses <code>&lt;-</code> (preferred) or <code>=</code> for assignment.",
+      c:`x <- 10
+name <- "Aruna"
+print(x)
+print(name)`, o:`[1] 10\n[1] "Aruna"`},
+    {t:"Data Types", n:"Core types: numeric, integer, character, logical, complex.",
+      c:`a <- 5.5        # numeric
+b <- 5L         # integer
+c <- "hello"    # character
+d <- TRUE       # logical
+print(class(a)); print(class(b))
+print(class(c)); print(class(d))`, o:`[1] "numeric"\n[1] "integer"\n[1] "character"\n[1] "logical"`},
+    {t:"User Input (readline)", n:"<code>readline()</code> reads a line of text from the console (interactive R scripts).",
+      c:`name <- readline(prompt = "Enter your name: ")
+print(paste("Hello,", name))`, o:`Enter your name: Aruna\n[1] "Hello, Aruna"`},
+    {t:"Type Conversion", n:"Use <code>as.numeric()</code>, <code>as.character()</code>, <code>as.integer()</code>, <code>as.logical()</code> to convert types.",
+      c:`x <- "100"
+y <- as.numeric(x)
+print(y + 5)
+print(class(y))`, o:`[1] 105\n[1] "numeric"`}
+  ],
+  cases:[
+    {l:"easy", q:"Create variables to store your name, age, and city. Print all three using <code>print()</code>."},
+    {l:"mod", q:"Take two numbers as input using <code>readline()</code>, convert them to numeric, and print their sum."},
+    {l:"hard", q:'Write a script that accepts a string input representing a decimal number (e.g. "45.67"), converts it to numeric, then to integer, and prints what happens to the decimal part.'}
+  ]
+},
+{
+  title:"Operators", topics:[
+    {t:"Arithmetic Operators", n:"<code>+ - * / %% (modulus) %/% (integer division) ^ (power)</code>",
+      c:`a <- 17; b <- 5
+print(a + b); print(a %% b)
+print(a %/% b); print(a ^ 2)`, o:`[1] 22\n[1] 2\n[1] 3\n[1] 289`},
+    {t:"Relational Operators", n:"<code>== != &gt; &lt; &gt;= &lt;=</code> — return logical (TRUE/FALSE).",
+      c:`x <- 10; y <- 20
+print(x < y)
+print(x == y)`, o:`[1] TRUE\n[1] FALSE`},
+    {t:"Logical Operators", n:"<code>&amp; (and) | (or) ! (not) &amp;&amp; ||</code> (single-element short-circuit)",
+      c:`p <- TRUE; q <- FALSE
+print(p & q)
+print(p | q)
+print(!p)`, o:`[1] FALSE\n[1] TRUE\n[1] FALSE`}
+  ],
+  cases:[
+    {l:"easy", q:"Take two numbers and print the result of all arithmetic operators between them."},
+    {l:"mod", q:"Check whether a given year is divisible by 4 using <code>%%</code>, and print TRUE/FALSE."},
+    {l:"hard", q:"Write an expression combining logical and relational operators to check if a number lies strictly between 10 and 50 AND is even."}
+  ]
+},
+{
+  title:"Decision Making", topics:[
+    {t:"if", n:"Runs a block only when the condition is TRUE.",
+      c:`age <- 20
+if (age >= 18) {
+  print("Adult")
+}`, o:`[1] "Adult"`},
+    {t:"if-else", n:"Runs one of two blocks depending on the condition.",
+      c:`num <- 7
+if (num %% 2 == 0) {
+  print("Even")
+} else {
+  print("Odd")
+}`, o:`[1] "Odd"`},
+    {t:"if-else-if", n:"Chains multiple conditions in order.",
+      c:`marks <- 72
+if (marks >= 90) {
+  print("Grade A")
+} else if (marks >= 70) {
+  print("Grade B")
+} else {
+  print("Grade C")
+}`, o:`[1] "Grade B"`},
+    {t:"switch()", n:"Selects one of several code blocks based on a value match.",
+      c:`day <- "Tue"
+result <- switch(day,
+  "Mon" = "Monday",
+  "Tue" = "Tuesday",
+  "Wed" = "Wednesday",
+  "Unknown day")
+print(result)`, o:`[1] "Tuesday"`}
+  ],
+  cases:[
+    {l:"easy", q:"Write an <code>if-else</code> program to check if a number is positive or negative."},
+    {l:"mod", q:"Using <code>if-else-if</code>, classify a person's BMI into Underweight, Normal, Overweight, or Obese."},
+    {l:"hard", q:'Use <code>switch()</code> to build a calculator that takes an operator ("+","-","*","/") and two numbers, and returns the result.'}
+  ]
+},
+{
+  title:"Data Structures", topics:[
+    {t:"Vectors", n:"A vector is an ordered collection of elements of the <b>same</b> type, created using <code>c()</code>.",
+      c:`v <- c(10, 20, 30, 40)
+print(v)
+print(v[2])
+print(sum(v))`, o:`[1] 10 20 30 40\n[1] 20\n[1] 100`},
+    {t:"Lists", n:"A list can hold elements of <b>different</b> types, created using <code>list()</code>.",
+      c:`person <- list(name = "Riya", age = 21, marks = c(90, 85, 88))
+print(person$name)
+print(person$marks)`, o:`[1] "Riya"\n[1] 90 85 88`}
+  ],
+  cases:[
+    {l:"easy", q:"Create a vector of 5 student marks and print the maximum and minimum."},
+    {l:"mod", q:"Create a list containing a student's name, roll number, and a vector of 3 subject marks. Print the average."},
+    {l:"hard", q:"Create a vector of 10 numbers. Using indexing only (no loop), extract the even-positioned elements, then reverse the vector."}
+  ]
+},
+{
+  title:"Loops", topics:[
+    {t:"for Loop", n:"Repeats a block for each value in a sequence.",
+      c:`for (i in 1:5) {
+  print(i * i)
+}`, o:`[1] 1\n[1] 4\n[1] 9\n[1] 16\n[1] 25`},
+    {t:"while Loop", n:"Repeats a block as long as a condition stays TRUE.",
+      c:`i <- 1
+while (i <= 5) {
+  print(i)
+  i <- i + 1
+}`, o:`[1] 1\n[1] 2\n[1] 3\n[1] 4\n[1] 5`}
+  ],
+  cases:[
+    {l:"easy", q:"Use a <code>for</code> loop to print the first 10 natural numbers."},
+    {l:"mod", q:"Use a <code>while</code> loop to print the Fibonacci series up to 10 terms."},
+    {l:"hard", q:'Using nested <code>for</code> loops, print a number pyramid pattern of 5 rows (row 1: "1", row 2: "1 2"...).'}
+  ]
+},
+{
+  title:"Functions", topics:[
+    {t:"User Defined Functions", n:"Created using the <code>function()</code> keyword; can take arguments, defaults, and return values.",
+      c:`square <- function(x) {
+  return(x * x)
+}
+print(square(6))
+
+greet <- function(name = "Student") {
+  paste("Welcome,", name)
+}
+print(greet())
+print(greet("Aruna"))`, o:`[1] 36\n[1] "Welcome, Student"\n[1] "Welcome, Aruna"`}
+  ],
+  cases:[
+    {l:"easy", q:"Write a function <code>isEven(n)</code> that returns TRUE if a number is even."},
+    {l:"mod", q:"Write a function <code>factorial(n)</code> that calculates factorial using a loop inside the function."},
+    {l:"hard", q:"Write a function <code>checkPrime(n)</code> returning TRUE/FALSE, then use it in a loop to print all primes between 1 and 50."}
+  ]
+},
+{
+  title:"Statistics", topics:[
+    {t:"Mean", n:"Average of all values.", c:`x <- c(10, 20, 30, 40, 50)\nprint(mean(x))`, o:`[1] 30`},
+    {t:"Median", n:"Middle value of sorted data.", c:`print(median(x))`, o:`[1] 30`},
+    {t:"Mode (function & library)", n:"R has no built-in mode function — write one, or use the <code>modeest</code> library.",
+      c:`getMode <- function(v) {
+  uniq <- unique(v)
+  uniq[which.max(tabulate(match(v, uniq)))]
+}
+data <- c(2, 3, 3, 4, 5, 3)
+print(getMode(data))
+
+library(modeest)
+print(mfv(data))`, o:`[1] 3\n[1] 3`},
+    {t:"unique()", n:"Returns distinct elements of a vector.", c:`print(unique(c(1, 2, 2, 3, 3, 3)))`, o:`[1] 1 2 3`},
+    {t:"which.max()", n:"Returns the index of the first maximum value.",
+      c:`v <- c(4, 9, 2, 9, 1)\nprint(which.max(v))`, o:`[1] 2`},
+    {t:"tabulate()", n:"Counts occurrences of integer values (frequency by bins).",
+      c:`print(tabulate(c(1, 2, 2, 3, 3, 3)))`, o:`[1] 1 2 3`},
+    {t:"Descriptive Statistics", n:"<code>min(), max(), range(), var(), sd(), summary()</code>",
+      c:`x <- c(12, 45, 23, 67, 34, 89, 10)
+print(min(x)); print(max(x)); print(range(x))
+print(var(x)); print(sd(x))
+print(summary(x))`, o:`[1] 10\n[1] 89\n[1] 10 89\n[1] 783.0\n[1] 27.98\n   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.\n  10.0    17.5    34.0    40.0    56.0    89.0`}
+  ],
+  cases:[
+    {l:"easy", q:"Given a vector of 6 exam scores, calculate and print the mean, median, min, and max."},
+    {l:"mod", q:"Given customer ratings (1–5) with repeats, find the mode using a custom function and verify with <code>tabulate()</code> + <code>which.max()</code>."},
+    {l:"hard", q:"Given daily temperatures for a month, compute variance, standard deviation, summary stats, and flag days deviating &gt;1 SD from the mean."}
+  ]
+},
+{
+  title:"Visualization", topics:[
+    {t:"Bar Plot (with customisation)", n:"Use <code>barplot()</code> with <code>col</code>, <code>main</code>, <code>xlab</code>, <code>ylab</code> to customize.",
+      c:`sales <- c(20, 35, 30, 45)
+names <- c("Q1", "Q2", "Q3", "Q4")
+barplot(sales,
+        names.arg = names,
+        col = "steelblue",
+        main = "Quarterly Sales",
+        xlab = "Quarter", ylab = "Sales (in K)",
+        border = "black")`, o:`[Displays a blue bar chart with 4 bars\nlabelled Q1-Q4, titled "Quarterly Sales"]`},
+    {t:"Pie Chart (with customisation)", n:"Use <code>pie()</code> with <code>col</code> and <code>main</code> for styling.",
+      c:`slices <- c(25, 35, 20, 20)
+labels <- c("Tea", "Coffee", "Juice", "Water")
+pie(slices, labels = labels,
+    col = rainbow(length(slices)),
+    main = "Beverage Preference")`, o:`[Displays a 4-slice pie chart with rainbow\ncolors, titled "Beverage Preference"]`},
+    {t:"Histogram (with customisation)", n:"Use <code>hist()</code> with <code>breaks</code> and <code>col</code> to control bins and colors.",
+      c:`marks <- c(55, 60, 65, 70, 70, 75, 80, 85, 90, 95)
+hist(marks,
+     col = "orange",
+     breaks = 5,
+     main = "Marks Distribution",
+     xlab = "Marks")`, o:`[Displays an orange histogram with 5 bins\nshowing distribution of marks]`}
+  ],
+  cases:[
+    {l:"easy", q:"Create a bar plot of monthly rainfall data (5 months) with a title and axis labels."},
+    {l:"mod", q:"Create a pie chart showing market share of 5 companies, with percentage labels on each slice."},
+    {l:"hard", q:"Generate 200 random values with <code>rnorm()</code>, plot a histogram with custom breaks/colors, and overlay a mean line using <code>abline()</code>."}
+  ]
+},
+{
+  title:"Data Frame", topics:[
+    {t:"Basics Data Frame Code", n:"A data frame is a table-like structure where columns can have different data types, created using <code>data.frame()</code>.",
+      c:`df <- data.frame(
+  Name = c("Aruna", "Riya", "Kabir"),
+  Age = c(28, 21, 24),
+  Marks = c(95, 88, 76)
+)
+print(df)
+print(df$Name)
+print(nrow(df))
+print(str(df))`, o:`   Name Age Marks\n1 Aruna  28    95\n2  Riya  21    88\n3 Kabir  24    76\n[1] "Aruna" "Riya"  "Kabir"\n[1] 3\n'data.frame': 3 obs. of  3 variables:\n $ Name : chr  "Aruna" "Riya" "Kabir"\n $ Age  : num  28 21 24\n $ Marks: num  95 88 76`}
+  ],
+  cases:[
+    {l:"easy", q:"Create a data frame of 4 students with Name and Marks columns, and print it."},
+    {l:"mod", q:"From a data frame of employees (Name, Department, Salary), filter and print employees with Salary &gt; 50000."},
+    {l:"hard", q:'Create a data frame of 5 products (Name, Price, Quantity). Add a "Total" column = Price * Quantity, then sort descending by Total.'}
+  ]
+}
+];
+
+/* ============================ RENDER ============================ */
+const levelMeta = { easy:["EASY","level-easy"], mod:["MODERATE","level-mod"], hard:["CHALLENGING","level-hard"] };
+
+function highlightR(code){
+  const esc = code.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const KW = /^(function|if|else|for|while|return|library|switch|TRUE|FALSE|in)$/;
+  const master = /("(?:[^"\\]|\\.)*")|(\b\d+\.?\d*L?\b)|([a-zA-Z_][a-zA-Z0-9_.]*)(?=\()|(\b[a-zA-Z_][a-zA-Z0-9_.]*\b)|(&lt;-|&lt;=|&gt;=|==|!=|%%|%\/%|&amp;&amp;|\|\||[+\-*/^])/g;
+  const lines = esc.split("\n").map(line=>{
+    let commentIdx = line.indexOf("#");
+    let codePart = commentIdx>=0 ? line.slice(0,commentIdx) : line;
+    let commentPart = commentIdx>=0 ? line.slice(commentIdx) : "";
+    codePart = codePart.replace(master, (m, str, num, fn, word, op)=>{
+      if(str) return `<span class="tok-str">${str}</span>`;
+      if(num) return `<span class="tok-num">${num}</span>`;
+      if(fn) return `<span class="tok-fn">${fn}</span>`;
+      if(word) return KW.test(word) ? `<span class="tok-kw">${word}</span>` : word;
+      if(op) return `<span class="tok-op">${op}</span>`;
+      return m;
+    });
+    if(commentPart) commentPart = '<span class="tok-com">'+commentPart+'</span>';
+    return codePart + commentPart;
+  });
+  return lines.join("\n");
+}
+
+const root = document.getElementById("modulesRoot");
+const navList = document.getElementById("navList");
+let totalTopics = 0;
+DATA.forEach(m=> totalTopics += m.topics.length);
+
+DATA.forEach((mod, mi)=>{
+  const modId = "module-"+mi;
+  // nav entry
+  const navEl = document.createElement("div");
+  navEl.className = "module-link";
+  navEl.dataset.target = modId;
+  navEl.innerHTML = `
+    <div class="ring-wrap">
+      <svg viewBox="0 0 22 22"><circle cx="11" cy="11" r="9.5" fill="none" stroke="var(--surface-3)" stroke-width="2.4"/>
+      <circle class="ring-fill" data-mod="${mi}" cx="11" cy="11" r="9.5" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="59.7" stroke-dashoffset="59.7"/></svg>
+      <span class="num" style="position:absolute;inset:0;background:none;font-size:9.5px;">${mi+1}</span>
+    </div>
+    <span class="label">${mod.title}</span>
+    <span class="pct" data-pct="${mi}">0%</span>`;
+  navEl.addEventListener("click", ()=>{
+    document.getElementById(modId).scrollIntoView({behavior:"smooth", block:"start"});
+    closeSidebar();
+  });
+  navList.appendChild(navEl);
+
+  // module section
+  const sec = document.createElement("section");
+  sec.className = "module";
+  sec.id = modId;
+  sec.innerHTML = `
+    <div class="module-head">
+      <div class="module-badge">${mi+1}</div>
+      <div>
+        <div class="module-eyebrow">Module ${mi+1} of ${DATA.length}</div>
+        <h2>${mod.title}</h2>
+      </div>
+    </div>
+    <div class="module-divider"></div>
+    <div class="topics-wrap"></div>
+  `;
+  const topicsWrap = sec.querySelector(".topics-wrap");
+
+  mod.topics.forEach((tp, ti)=>{
+    const topicId = `t-${mi}-${ti}`;
+    const card = document.createElement("div");
+    card.className = "topic";
+    card.innerHTML = `
+      <div class="topic-head">
+        <h3><span class="dot"></span>${tp.t}</h3>
+        <div class="topic-check" data-id="${topicId}">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2.5 6.5L5 9L10.5 3.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+      <div class="topic-body">
+        <p class="topic-note">${tp.n}</p>
+        <div class="code-block">
+          <div class="code-bar">
+            <span class="lang">R</span>
+            <button class="copy-btn">
+              <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.1"/><path d="M2 8V2.5C2 2.22 2.22 2 2.5 2H8" stroke="currentColor" stroke-width="1.1"/></svg>
+              Copy
+            </button>
+          </div>
+          <pre class="code">${highlightR(tp.c)}</pre>
+        </div>
+        <span class="output-label">Output</span>
+        <div class="output-block">${tp.o.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</div>
+      </div>
+    `;
+    topicsWrap.appendChild(card);
+
+    // copy button
+    const copyBtn = card.querySelector(".copy-btn");
+    copyBtn.addEventListener("click", ()=>{
+      navigator.clipboard.writeText(tp.c).then(()=>{
+        copyBtn.innerHTML = "✓ Copied";
+        setTimeout(()=> copyBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 12 12" fill="none"><rect x="4" y="4" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.1"/><path d="M2 8V2.5C2 2.22 2.22 2 2.5 2H8" stroke="currentColor" stroke-width="1.1"/></svg> Copy`, 1400);
+      });
+    });
+
+    // checkbox
+    const checkEl = card.querySelector(".topic-check");
+    checkEl.addEventListener("click", ()=>{
+      checkEl.classList.toggle("checked");
+      saveProgress(topicId, checkEl.classList.contains("checked"));
+      updateProgressUI();
+    });
+  });
+
+  // case studies
+  const caseWrap = document.createElement("div");
+  caseWrap.className = "case-wrap";
+  caseWrap.innerHTML = `
+    <div class="case-head"><span class="icon">🧩</span><h4>Case Study Questions</h4></div>
+    <div class="case-list">
+      ${mod.cases.map((cs,i)=>{
+        const [label, cls] = levelMeta[cs.l];
+        return `<div class="case-item"><span class="case-num">${i+1}.</span><span class="case-text"><span class="level-tag ${cls}">${label}</span>${cs.q}</span></div>`;
+      }).join("")}
+    </div>
+  `;
+  sec.appendChild(caseWrap);
+  root.appendChild(sec);
+});
+
+/* ============================ PROGRESS PERSISTENCE ============================ */
+const STORAGE_KEY = "aruna_r_progress_v1";
+function getProgress(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; }
+}
+function saveProgress(id, val){
+  const p = getProgress();
+  p[id] = val;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(p));
+}
+function loadProgressIntoUI(){
+  const p = getProgress();
+  document.querySelectorAll(".topic-check").forEach(el=>{
+    if(p[el.dataset.id]) el.classList.add("checked");
+  });
+  updateProgressUI();
+}
+function updateProgressUI(){
+  let total=0, done=0;
+  DATA.forEach((mod, mi)=>{
+    let modDone=0;
+    mod.topics.forEach((tp,ti)=>{
+      total++;
+      const id = `t-${mi}-${ti}`;
+      const el = document.querySelector(`.topic-check[data-id="${id}"]`);
+      if(el && el.classList.contains("checked")){ done++; modDone++; }
+    });
+    const pct = Math.round((modDone/mod.topics.length)*100);
+    const ringEl = document.querySelector(`.ring-fill[data-mod="${mi}"]`);
+    const pctEl = document.querySelector(`.pct[data-pct="${mi}"]`);
+    if(ringEl){
+      const circumference = 59.7;
+      ringEl.style.strokeDashoffset = circumference - (circumference*pct/100);
+    }
+    if(pctEl) pctEl.textContent = pct+"%";
+    const navEl = document.querySelectorAll(".module-link")[mi];
+    if(navEl) navEl.classList.toggle("complete", pct===100);
+  });
+  const overallPct = total? Math.round((done/total)*100) : 0;
+  document.getElementById("progressLabel").textContent = overallPct+"% complete";
+  const circumference = 97.4;
+  document.getElementById("pillRing").style.strokeDashoffset = circumference - (circumference*overallPct/100);
+}
+document.getElementById("resetBtn").addEventListener("click", ()=>{
+  if(confirm("Reset all your progress on this device?")){
+    localStorage.removeItem(STORAGE_KEY);
+    document.querySelectorAll(".topic-check").forEach(el=>el.classList.remove("checked"));
+    updateProgressUI();
+  }
+});
+
+/* ============================ THEME ============================ */
+const themeToggle = document.getElementById("themeToggle");
+const themeKnob = document.getElementById("themeKnob");
+function setTheme(mode){
+  document.body.setAttribute("data-theme", mode);
+  themeKnob.textContent = mode==="dark" ? "🌙" : "☀️";
+  localStorage.setItem("aruna_theme", mode);
+}
+const savedTheme = localStorage.getItem("aruna_theme");
+const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+setTheme(savedTheme || (prefersDark ? "dark" : "light"));
+themeToggle.addEventListener("click", ()=>{
+  setTheme(document.body.getAttribute("data-theme")==="dark" ? "light" : "dark");
+});
+
+/* ============================ SCROLL PROGRESS + ACTIVE NAV ============================ */
+const scrollBar = document.getElementById("scroll-progress");
+function onScroll(){
+  const h = document.documentElement;
+  const scrolled = (h.scrollTop) / (h.scrollHeight - h.clientHeight) * 100;
+  scrollBar.style.width = scrolled+"%";
+  document.getElementById("fab").classList.toggle("show", h.scrollTop > 600);
+}
+document.addEventListener("scroll", onScroll);
+
+const sections = document.querySelectorAll(".module");
+const navLinks = document.querySelectorAll(".module-link");
+if("IntersectionObserver" in window){
+  const observer = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting) entry.target.classList.add("in-view");
+    });
+  }, {threshold:0.08});
+  sections.forEach(s=>{ s.classList.add("pre-reveal"); observer.observe(s); });
+}
+
+if("IntersectionObserver" in window){
+  const navObserver = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      const link = document.querySelector(`.module-link[data-target="${entry.target.id}"]`);
+      if(entry.isIntersecting){
+        navLinks.forEach(l=>l.classList.remove("active"));
+        if(link) link.classList.add("active");
+      }
+    });
+  }, {rootMargin:"-30% 0px -55% 0px"});
+  sections.forEach(s=>navObserver.observe(s));
+}
+
+/* ============================ MOBILE SIDEBAR ============================ */
+const sidebar = document.getElementById("sidebar");
+const overlay = document.getElementById("overlay");
+document.getElementById("hamburgerBtn").addEventListener("click", ()=>{
+  sidebar.classList.add("open"); overlay.classList.add("show");
+});
+overlay.addEventListener("click", closeSidebar);
+function closeSidebar(){ sidebar.classList.remove("open"); overlay.classList.remove("show"); }
+
+/* ============================ BACK TO TOP ============================ */
+document.getElementById("fab").addEventListener("click", ()=> window.scrollTo({top:0, behavior:"smooth"}));
+
+loadProgressIntoUI();
+</script>
+</body>
+</html>
